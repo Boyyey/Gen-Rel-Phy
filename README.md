@@ -154,6 +154,6 @@ exact Kerr / Schwarzschild          linearized 1+1D solver (RW / Zerilli)
 | Mode coupling | Does nonlinearity generate extra spectral structure? |
 | Inverse recovery | How much of \((m_1,m_2,\chi_1,\chi_2)\) is encoded in \(h(t)\)? |
 
-These are the plots and tables that belong on an ISEF poster — not screenshots of a glowing disk.
+These are the plots and tables that belong to the simulation and not screenshots of a glowing disk.
 
 
