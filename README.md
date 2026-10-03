@@ -1,6 +1,8 @@
 # Dynamical Spacetime
 A computational general-relativity laboratory
 
+<img width="1877" height="742" alt="Screenshot 2026-10-03 164909" src="https://github.com/user-attachments/assets/5741f22e-27f6-402d-9e26-44ebd9a2f73e" />
+<img width="1860" height="687" alt="Screenshot 2026-10-03 165134" src="https://github.com/user-attachments/assets/6e92bb7b-fba8-4909-844a-2ff699a63798" />
 ## Project Title
 **Dynamical Spacetime: A Computational Investigation of Nonlinear Gravitational Dynamics and Gravitational-Wave Information**
 
