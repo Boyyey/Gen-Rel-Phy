@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DYNAMICAL SPACETIME — Computational GR Laboratory</title>
+  <link rel="stylesheet" href="/static/css/lab.css?v=13" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="vignette"></div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="pulse"></span>
+      <div>
+        <h1>DYNAMICAL SPACETIME</h1>
+        <p>curvature is measured · test bodies move · radiation carries source information</p>
+      </div>
+    </div>
+    <div class="status" id="status">STANDBY</div>
+  </header>
+
+  <section class="launch-gate" id="launch-gate" aria-labelledby="launch-title">
+    <div class="launch-panel">
+      <p class="launch-kicker">DYNAMICAL SPACETIME / EXPERIMENT CONTROL</p>
+      <h2 id="launch-title">Choose a research path</h2>
+      <p class="launch-intro">Select the model first. Set its parameters in the laboratory, then run it when you are ready.</p>
+      <div class="launch-options">
+        <label class="launch-option">
+          <input type="radio" name="launch-mode" value="blackhole" checked />
+          <span><strong>Compact-binary inspiral</strong><small>Post-Newtonian waveform + remnant ringdown model</small></span>
+        </label>
+        <label class="launch-option">
+          <input type="radio" name="launch-mode" value="collision" />
+          <span><strong>Newtonian collision</strong><small>Gravity-grid view, material impacts or black-hole capture proxy</small></span>
+        </label>
+        <label class="launch-option">
+          <input type="radio" name="launch-mode" value="orbit" />
+          <span><strong>Bound orbit & impact</strong><small>Under-circular orbit, gravitational approach and material response</small></span>
+        </label>
+        <label class="launch-option">
+          <input type="radio" name="launch-mode" value="scattering" />
+          <span><strong>Gravitational scattering</strong><small>Close encounter, periapsis and outgoing trajectory</small></span>
+        </label>
+        <label class="launch-option">
+          <input type="radio" name="launch-mode" value="perturb" />
+          <span><strong>Spacetime perturbation</strong><small>Regge–Wheeler / Zerilli wave propagation</small></span>
+        </label>
+      </div>
+      <button class="run" id="launch-enter" type="button">CONFIGURE EXPERIMENT</button>
+      <p class="launch-footnote">No run starts until you explicitly press an experiment control.</p>
+    </div>
+  </section>
+
+  <main class="stage">
+    <section class="viewport">
+      <canvas id="bh"></canvas>
+      <div class="overlay-hud">
+        <div class="hud-line">STAGE <span id="hud-stage">IDLE DISK</span></div>
+        <div class="hud-line">SEPARATION <span id="hud-sep">—</span></div>
+        <div class="hud-line">ENERGY <span id="hud-e">—</span></div>
+        <div class="hud-line">ANGULAR MOM. <span id="hud-l">—</span></div>
+        <div class="hud-line">HORIZON <span id="hud-rh">2.000 M</span></div>
+        <div class="hud-line">PHOTON RING <span id="hud-ph">3.000 M</span></div>
+        <div class="hud-line">ISCO <span id="hud-isco">6.000 M</span></div>
+        <div class="hud-line">SPIN χ <span id="hud-chi">0.700</span></div>
+      </div>
+      <div class="transport">
+        <button id="btn-pause" type="button">PAUSE</button>
+        <button data-spd="0.25" type="button">0.25×</button>
+        <button data-spd="1" class="on" type="button">1×</button>
+        <button data-spd="4" type="button">4×</button>
+        <button data-spd="16" type="button">16×</button>
+        <button data-spd="32" type="button">32×</button>
+        <button data-spd="64" type="button">64×</button>
+        <label class="tiny">GRID <input id="grid" type="range" min="0" max="1" step="0.01" value="0.70" /></label>
+        <label class="tiny">DISK <input id="disk" type="range" min="0" max="1" step="0.01" value="0.85" /></label>
+        <label class="tiny collision-only" title="Visual overlay only; does not change the Newtonian force model">LENS BH <input id="lens-bh" type="checkbox" checked /></label>
+        <label class="tiny">ZOOM <input id="cam-dist" type="range" min="8" max="180" step="1" value="28" /></label>
+        <label class="tiny">AZ <input id="cam-az" type="range" min="0" max="6.283" step="0.01" value="0.35" /></label>
+        <label class="tiny">EL <input id="cam-el" type="range" min="0.18" max="1.52" step="0.01" value="1.38" /></label>
+        <button id="cam-reset" type="button">RESET VIEW</button>
+      </div>
+      <div class="hint">drag to orbit · shift-drag pitch · wheel zoom</div>
+      <div class="quote">WE DIDN'T PROGRAM A PICTURE OF A BLACK HOLE.<br/>WE BUILT A COMPUTATIONAL LAB TO TEST THE PHYSICS IT REVEALS.</div>
+    </section>
+
+    <aside class="console">
+      <nav class="tabs">
+        <button class="tab on" data-tab="binary">EVOLVE</button>
+        <button class="tab" data-tab="perturb">PERTURB</button>
+        <button class="tab" data-tab="inverse">INVERSE</button>
+        <button class="tab" data-tab="campaign">CAMPAIGN</button>
+        <button class="tab" data-tab="geodesic">GEODESICS</button>
+        <button class="tab" data-tab="kerr">KERR LAB</button>
+        <button class="tab" data-tab="validation">VALIDATE</button>
+      </nav>
+
+      <div class="panel on" id="tab-binary">
+        <h2>Two-body spacetime laboratory</h2>
+        <div class="scenario-select">
+          <label>Simulation Mode:</label>
+          <select id="sim-mode">
+            <option value="blackhole" selected>Black-hole Binary (PN + Ringdown)</option>
+            <option value="collision">Newtonian Collision / Capture</option>
+            <option value="scattering">Gravitational Scattering</option>
+            <option value="orbit">Bound Orbit & Impact</option>
+          </select>
+        </div>
+        <div class="pair">
+          <fieldset>
+            <legend>OBJECT A</legend>
+            <select id="k1">
+              <option value="black_hole" selected>Black hole</option>
+              <option value="neutron_star">Neutron star</option>
+              <option value="star">Star</option>
+              <option value="mass_sphere">Mass sphere</option>
+              <option value="planet">Rocky planet (mass in M⊕)</option>
+            </select>
+            <label><span>Mass / <span id="m1-unit">M☉</span></span> <input id="m1" type="range" min="1" max="40" step="0.1" value="10" /><b id="m1v">10.0</b></label>
+            <label>Spin χ <input id="c1" type="range" min="0" max="0.95" step="0.01" value="0.70" /><b id="c1v">0.70</b></label>
+            <label class="collision-only linear-only">Velocity / km s⁻¹ <input id="v1" type="range" min="0" max="30000" step="10" value="3000" /><b id="v1v">3000</b></label>
+          </fieldset>
+          <fieldset>
+            <legend>OBJECT B</legend>
+            <select id="k2">
+              <option value="black_hole" selected>Black hole</option>
+              <option value="neutron_star">Neutron star</option>
+              <option value="star">Star</option>
+              <option value="mass_sphere">Mass sphere</option>
+              <option value="planet">Rocky planet (mass in M⊕)</option>
+            </select>
+            <label><span>Mass / <span id="m2-unit">M☉</span></span> <input id="m2" type="range" min="1" max="40" step="0.1" value="8" /><b id="m2v">8.0</b></label>
+            <label>Spin χ <input id="c2" type="range" min="0" max="0.95" step="0.01" value="0.55" /><b id="c2v">0.55</b></label>
+            <label class="collision-only linear-only">Velocity / km s⁻¹ <input id="v2" type="range" min="0" max="30000" step="10" value="2700" /><b id="v2v">2700</b></label>
+          </fieldset>
+        </div>
+        <label>Distance / Mpc <input id="dist" type="range" min="20" max="400" step="1" value="100" /><b id="distv">100</b></label>
+        <label class="collision-only">Impact parameter / km <input id="impact" type="range" min="0" max="200000" step="100" value="0" /><b id="impactv">0</b></label>
+        <label class="orbit-only">Orbital speed / circular speed <input id="orbit-speed" type="range" min="0.2" max="0.8" step="0.01" value="0.35" /><b id="orbit-speed-v">0.35</b></label>
+        <label class="collision-only">Impact response <select id="impact-response"><option value="1">Elastic rebound · e = 1</option><option value="0.25" selected>Damped collision · e = 0.25</option><option value="0">Merge/stick · e = 0</option></select></label>
+        <div class="button-row">
+          <button class="run" id="run-binary">EVOLVE SPACETIME</button>
+          <button class="run fast" id="fast-track">⚡ FAST TRACK</button>
+          <button class="run export" id="export-data">📤 EXPORT</button>
+        </div>
+        <p class="note">Newtonian gravity changes the computed trajectories; the mesh visualizes the mass-dependent potential. Planet radii use an approximate rocky mass-radius relation. Black-hole contact uses an absorbing Schwarzschild-radius proxy, not a GR horizon solver. Scene distances are compressed; charts stay quantitative. The optional central lens is visual-only.</p>
+        <div class="metrics" id="bin-metrics"></div>
+        <section class="mechanics-readout" aria-label="AP Physics C mechanics components" hidden>
+          <h3>Mechanics components · SI units</h3>
+          <label>Track sample <select id="mechanics-phase"><option value="initial">Initial state</option><option value="closest">Closest approach</option><option value="final">Final state</option></select></label>
+          <div class="metrics" id="mechanics-metrics">Run an encounter to resolve vectors, forces, energy and momentum.</div>
+        </section>
+      </div>
+
+      <div class="panel" id="tab-perturb">
+        <h2>Regge–Wheeler / Zerilli evolution</h2>
+        <label>Amplitude ε <input id="amp" type="range" min="0.0002" max="0.04" step="0.0002" value="0.002" /><b id="ampv">0.0020</b></label>
+        <label>Packet width <input id="wid" type="range" min="1.2" max="10" step="0.1" value="3" /><b id="widv">3.0</b></label>
+        <label>Nonlinear λ <input id="lam" type="range" min="0" max="40" step="0.5" value="0" /><b id="lamv">0.0</b></label>
+        <label>Grid N<sub>r</sub> <input id="nr" type="range" min="201" max="801" step="50" value="401" /><b id="nrv">401</b></label>
+        <button class="run" id="run-perturb">INJECT PERTURBATION</button>
+        <div class="metrics" id="pert-metrics"></div>
+      </div>
+
+      <div class="panel" id="tab-inverse">
+        <h2>h(t) → spacetime parameters</h2>
+        <p class="note">Hide the source. Recover mass and spin from strain alone by mismatch minimization. No neural nets.</p>
+        <button class="run" id="run-inverse">INFER FROM THE WAVE</button>
+        <div class="metrics" id="inv-metrics"></div>
+      </div>
+
+      <div class="panel" id="tab-campaign">
+        <h2>Research campaign</h2>
+        <p class="note">Amplitude, wavelength, spin, mass ratio, resolution, mode coupling, known solutions.</p>
+        <div class="row">
+          <button class="run ghost" data-exp="known">KNOWN SOLUTIONS</button>
+          <button class="run ghost" data-exp="convergence">CONVERGENCE</button>
+          <button class="run ghost" data-exp="amplitude">AMPLITUDE</button>
+          <button class="run ghost" data-exp="spin">SPIN QNM</button>
+          <button class="run ghost" data-exp="mass_ratio">MASS RATIO</button>
+          <button class="run ghost" data-exp="modes">MODE COUPLING</button>
+        </div>
+        <pre class="log" id="campaign-log">Awaiting experiment…</pre>
+      </div>
+
+      <div class="panel" id="tab-geodesic">
+        <h2>Geodesic trajectory lab</h2>
+        <p class="note">Integrate test-particle orbits in a Kerr background. The object does not back-react on the metric.</p>
+        <label>Central mass / M☉ <input id="geo-mass" type="range" min="1" max="40" step="0.5" value="10" /><b id="geo-mass-v">10.0</b></label>
+        <label>Spin χ <input id="geo-spin" type="range" min="0" max="0.99" step="0.01" value="0.7" /><b id="geo-spin-v">0.70</b></label>
+        <label>Start radius / M <input id="geo-r0" type="range" min="6.1" max="30" step="0.1" value="10" /><b id="geo-r0-v">10.0</b></label>
+        <button class="run" id="run-geodesic">INTEGRATE GEODESIC</button>
+        <canvas class="tool-chart" id="geo-chart"></canvas>
+        <div class="metrics" id="geo-metrics"></div>
+      </div>
+
+      <div class="panel" id="tab-kerr">
+        <h2>Kerr spacetime explorer</h2>
+        <p class="note">Sweep dimensionless spin and compare exact metric radii with the fitted dominant ringdown mode.</p>
+        <label>Mass / M☉ <input id="kerr-mass" type="range" min="1" max="40" step="0.5" value="10" /><b id="kerr-mass-v">10.0</b></label>
+        <label>Spin χ <input id="kerr-spin" type="range" min="0" max="0.99" step="0.01" value="0.7" /><b id="kerr-spin-v">0.70</b></label>
+        <button class="run" id="run-kerr">MAP SPIN DEPENDENCE</button>
+        <canvas class="tool-chart" id="kerr-chart"></canvas>
+        <div class="metrics" id="kerr-metrics"></div>
+      </div>
+
+      <div class="panel" id="tab-validation">
+        <h2>Numerical validation bench</h2>
+        <p class="note">Run analytic checks and resolution refinement as reproducible computational experiments.</p>
+        <div class="row">
+          <button class="run ghost" data-exp="known" data-output="validation-log">ANALYTIC CHECKS</button>
+          <button class="run ghost" data-exp="convergence" data-output="validation-log">GRID CONVERGENCE</button>
+        </div>
+        <pre class="log" id="validation-log">Choose a validation experiment…</pre>
+      </div>
+    </aside>
+  </main>
+
+  <section class="scopes">
+    <div class="scope">
+      <header>STRAIN h<sub>+</sub>(t) · playhead follows the evolution</header>
+      <canvas id="wave"></canvas>
+    </div>
+    <div class="scope">
+      <header>SPECTRUM |h̃(f)| · CHIRP</header>
+      <canvas id="spec"></canvas>
+    </div>
+    <div class="scope">
+      <header>SPECTROGRAM · frequency evolution in time</header>
+      <canvas id="spectrogram"></canvas>
+    </div>
+    <div class="scope">
+      <header>MASTER FUNCTION Ψ(t, r*) · spacetime grid of the wave</header>
+      <canvas id="field"></canvas>
+    </div>
+  </section>
+
+  <section class="science">
+    <h2>Diagnostic campaign — the graphs the experiment is made of</h2>
+    <p class="note">Measured diagnostics from the selected run. Curves use physical or total-mass geometric units as named; field surfaces are model proxies, not a full 3+1 Einstein evolution.</p>
+  </section>
+
+  <section class="theory">
+    <div class="formulas">
+      <h3>Physics Formulas & Equations</h3>
+      <div class="formula-grid">
+        <div class="formula">
+          <strong>Einstein field equation · theory context</strong>
+          <code>G<sub>μν</sub> + Λg<sub>μν</sub> = (8πG/c⁴)T<sub>μν</sub></code>
+          <p>Curvature couples to stress-energy. This app does not solve the full 3+1 equation: it uses exact Schwarzschild/Kerr diagnostics, linear Schwarzschild perturbations, and a phenomenological binary waveform.</p>
+        </div>
+        <div class="formula">
+          <strong>AP Physics C · vectors and gravitation</strong>
+          <code>F⃗₁₂ = Gm₁m₂ r⃗/r³; &nbsp; a⃗₁ = F⃗₁₂/m₁</code>
+          <p>The mechanics panel decomposes separation, relative velocity, force, acceleration, momentum and angular momentum into SI components at the selected track sample.</p>
+        </div>
+        <div class="formula">
+          <strong>AP Physics C · impact and energy</strong>
+          <code>J⃗ = Δp⃗; &nbsp; ΔK = ½μv²<sub>n</sub>(1−e²)</code>
+          <p>For finite-size Newtonian impacts, restitution e sets normal rebound speed. Lost translational kinetic energy is reported as impact dissipation; repeated low-e contacts settle into a merged-sphere proxy. Fragmentation, heat transport and material strength are not modeled.</p>
+        </div>
+        <div class="formula">
+          <strong>AP Physics C · bound orbit and contact</strong>
+          <code>v<sub>circ</sub> = √(GM/r); &nbsp; T = 2π√(r³/GM)</code>
+          <p>The orbit control initializes a bound apocenter with a chosen fraction of circular speed. Newtonian gravity is conservative between impacts, so only an orbit whose periapsis reaches the finite-radius bodies collides; no invisible drag is added.</p>
+        </div>
+        <div class="formula">
+          <strong>Regge–Wheeler / Zerilli master equation</strong>
+          <code>∂²<sub>t</sub>Ψ − ∂²<sub>r*</sub>Ψ + V<sub>ℓ</sub>(r)Ψ = S<sub>NL</sub></code>
+          <p>A 1+1D wave equation for linearized metric perturbations on a fixed Schwarzschild background. The optional λΨ² term is a controlled proxy, not a full nonlinear Einstein source.</p>
+        </div>
+        <div class="formula">
+          <strong>Newtonian acceleration · collision/scattering/orbit</strong>
+          <code>r̈ = −G(m₁+m₂) r⃗ / |r⃗|³</code>
+          <p>Inputs are converted to total-mass geometric units; the relative orbit is integrated with adaptive DOP853 and a terminal surface-contact event. Restitution controls impact response. Black-hole contact uses an absorbing Schwarzschild-radius proxy with a qualitative fade, not relativistic horizon dynamics or a numerical-relativity merger.</p>
+        </div>
+        <div class="formula">
+          <strong>Energy and angular momentum</strong>
+          <code>E = ½μv² − Gm₁m₂/r; &nbsp; L⃗ = μ(r⃗ × v⃗)</code>
+          <p>For an isolated Newtonian pair these are conserved, including through an ideal elastic contact. The plots report energy as E/(Mc²) and angular momentum as c|L|/(GM²).</p>
+        </div>
+        <div class="formula">
+          <strong>Leading-order quadrupole strain</strong>
+          <code>h<sub>+</sub> ≈ [G/(c⁴D)] d²(I<sub>xx</sub>−I<sub>yy</sub>)/dt²</code>
+          <p>The Newtonian tracks produce a diagnostic far-field strain at distance D; h× uses 2Ixy. Finite differences estimate the second derivative. Radiation reaction is not applied to the orbit.</p>
+        </div>
+        <div class="formula">
+          <strong>Schwarzschild curvature invariant</strong>
+          <code>K = R<sub>αβγδ</sub>R<sup>αβγδ</sup> = 48M²/r⁶ &nbsp; (G=c=1)</code>
+          <p>Exact for one nonrotating black hole. The two-center path diagnostic sums isolated-source terms and is therefore explicitly approximate; K has units M⁻⁴.</p>
+        </div>
+        <div class="formula">
+          <strong>Frequency spectrum</strong>
+          <code>h̃(f) = ∫ h(t)e<sup>−2πift</sup>dt; &nbsp; Δf ≈ 1/T</code>
+          <p>The discrete Fourier transform reveals signal power by frequency. The spectrogram repeats a windowed transform over time to expose chirp and ringdown structure.</p>
+        </div>
+        <div class="formula">
+          <strong>Curved-spacetime motion</strong>
+          <code>d²x<sup>μ</sup>/dλ² + Γ<sup>μ</sup><sub>αβ</sub>(dx<sup>α</sup>/dλ)(dx<sup>β</sup>/dλ) = 0</code>
+          <p>Geodesics are free-fall/light paths in a metric. The lensing renderer visualizes a Schwarzschild-inspired null-ray model; its color and grid are not numerical-relativity data.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="science">
+    <div class="plot-grid">
+      <figure class="plot"><canvas id="p-traj3d"></canvas><figcaption><strong>3D worldlines</strong><span>Object positions (x,y,z) in total-mass units M. The current orbital models are planar, so z = 0.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-wave-surface"></canvas><figcaption><strong>3D time-frequency waterfall</strong><span>Windowed spectral amplitude across time [s] and frequency [Hz]; vertical height/color encode normalized power.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-hp"></canvas><figcaption><strong>Plus-polarized strain h₊</strong><span>Dimensionless detector strain versus time [s]; quadrupole estimate for Newtonian tracks, modeled IMR strain for binary runs.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-hc"></canvas><figcaption><strong>Cross-polarized strain h×</strong><span>Dimensionless orthogonal polarization versus time [s]. Its phase relative to h₊ carries orbital orientation information.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-psi4"></canvas><figcaption><strong>Wave curvature proxy Ψ₄</strong><span>−d²h/dt² [s⁻²]; a radiative-curvature proxy, not the full Newman–Penrose extraction at null infinity.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-freq"></canvas><figcaption><strong>Instantaneous GW frequency</strong><span>Signal frequency [Hz] versus time [s]; a rising track is the chirp as orbital timescales shorten.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-spec"></canvas><figcaption><strong>Fourier amplitude spectrum</strong><span>|h̃(f)| versus frequency [Hz]. Peaks mark strong signal bands; resolution is set by the run duration.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-sep"></canvas><figcaption><strong>Center-to-center separation</strong><span>Binary separation r [M] versus coordinate time [M]. Contact is a finite-radius boundary for Newtonian hard spheres.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-energy"></canvas><figcaption><strong>Orbital energy diagnostic</strong><span>Newtonian: E/(Mc²), dimensionless. Inspiral model: binding energy in geometric mass units M.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-ang"></canvas><figcaption><strong>Orbital angular momentum</strong><span>Newtonian: c|L|/(GM²), dimensionless. Inspiral model: angular momentum in geometric units M².</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-erad"></canvas><figcaption><strong>Accumulated strain power</strong><span>∫h²dt [s]; a signal diagnostic only, not a calibrated radiated-energy measurement.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-omega"></canvas><figcaption><strong>Orbital angular frequency</strong><span>dφ/dt [M⁻¹], derived from orbital phase. A Newtonian scattering track changes sign through the encounter.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-phase"></canvas><figcaption><strong>Unwrapped GW phase</strong><span>Phase [rad] versus time [s]; unwrapping removes artificial 2π jumps.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-strain-amp"></canvas><figcaption><strong>Strain amplitude envelope</strong><span>√(h₊²+h×²), dimensionless; amplitude and distance scaling are shown by the chosen source model.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-chirp"></canvas><figcaption><strong>Chirp rate</strong><span>df/dt [Hz/s]. Positive values indicate increasing frequency; noisy derivatives are resolution-sensitive.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-orb-phase"></canvas><figcaption><strong>Orbital phase</strong><span>φ [rad] versus coordinate time [M], computed from the relative position of the two bodies.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-kretschmann"></canvas><figcaption><strong>Two-center curvature estimate</strong><span>K [M⁻⁴], summed Schwarzschild-source approximation along the orbit, not the exact binary curvature.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-early"></canvas><figcaption><strong>3D potential surface · initial</strong><span>Dimensionless −Φ_N/c² proxy over x,y [M]; wells deepen toward each mass. Height and color encode potential magnitude.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-mid"></canvas><figcaption><strong>3D potential surface · intermediate</strong><span>Same potential proxy at one-third of the track. Changing well positions show how source motion reshapes the field map.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-late"></canvas><figcaption><strong>3D potential surface · final</strong><span>Late-track two-center potential proxy. A remnant field is not inferred for Newtonian collisions or scattering.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-ham"></canvas><figcaption><strong>Constraint-shaped diagnostic surface</strong><span>|H| proxy [dimensionless], proportional to |Φ| in this visualization. It is not a solved Hamiltonian constraint residual.</span></figcaption></figure>
+      <figure class="plot"><canvas id="p-curvature-surface"></canvas><figcaption><strong>3D curvature landscape</strong><span>Two-center K estimate [M⁻⁴] over x,y [M]. Peaks mark strong-field regions; this is a superposed isolated-source approximation.</span></figcaption></figure>
+    </div>
+  </section>
+
+  <footer>
+    G<sub>μν</sub> = 8π T<sub>μν</sub> · the GPU image is lensed light · the Python package is the experiment
+  </footer>
+
+  <script src="/static/js/charts.js?v=9"></script>
+  <script src="/static/js/science-plots.js?v=11"></script>
+  <script src="/static/js/raymarch.js?v=15"></script>
+  <script src="/static/js/app.js?v=20"></script>
+</body>
+</html>

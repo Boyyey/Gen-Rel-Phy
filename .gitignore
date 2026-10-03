@@ -1,0 +1,11 @@
+# Dynamical Spacetime
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+results/
+*.egg-info/
+dist/
+build/
+.DS_Store

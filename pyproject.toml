@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dynamical-spacetime"
+version = "0.1.0"
+description = "A computational laboratory for nonlinear gravitational dynamics and gravitational-wave information"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Dynamical Spacetime Lab" }]
+license = { text = "MIT" }
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "matplotlib>=3.8",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+spacetime-lab = "dynamica.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["dynamica*"]
