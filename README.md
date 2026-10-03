@@ -155,39 +155,4 @@ exact Kerr / Schwarzschild          linearized 1+1D solver (RW / Zerilli)
 
 These are the plots and tables that belong on an ISEF poster — not screenshots of a glowing disk.
 
----
 
-## Honesty about limitations (judges will ask)
-
-- The RW/Zerilli solver is **linearized gravity on a fixed Schwarzschild background**, plus an *optional, phenomenological* nonlinear term. It is not the full nonlinear Einstein equation in 3+1 dimensions.
-- The binary model is a **physically structured phenomenological IMR**, not a BSSN numerical-relativity merger.
-- Newtonian encounters use adaptive DOP853 integration with a terminal contact event. Restitution controls rebound and translational kinetic-energy loss; repeated damped contacts settle into a merged-sphere proxy. Black-hole contact freezes the relative state at the absorbing radius and fades the bodies into a remnant visual. Neither behavior solves a relativistic horizon or merger.
-- Newtonian bound orbits are conservative between contact events. No tidal friction is silently added; a circular Newtonian orbit does not spiral inward without an extra dissipative mechanism. The under-circular orbit control can set a periapsis inside the finite-size surfaces.
-- The field surfaces are **dimensionless two-center potential proxies**; the Hamiltonian-shaped surface is a scaled visualization quantity, not a constraint residual. The two-center Kretschmann diagnostic sums isolated-source estimates, not the exact binary invariant.
-- Newtonian trajectories use \(\ddot{\mathbf r}=-G(m_1+m_2)\mathbf r/r^3\), so increasing mass changes actual acceleration, periapsis, contact, and outgoing paths. The gravity-grid rendering uses a separate mass-scaled potential warp; it is a visualization, not a second force term or an evolved metric.
-- The WebGL scene is an **original** real-time geodesic-lensing renderer (volumetric disk, Doppler beaming, gravitational redshift, photon ring, and gravity grid). It is inspired by the Interstellar look, **not** copied from Shadertoy. Black-hole binary motion uses the PN timeline; the optional central lens in Newtonian modes is visual-only and disabled by default. Newtonian scene separation is logarithmically compressed while quantitative plots remain in total-mass geometric units.
-- Playback: pause / 0.25× / 1× / 4× / 16×. Drag the viewport to orbit, shift-drag to change elevation, mouse wheel or the ZOOM slider to move the camera in and out. RESET VIEW restores the default Gargantua inclination. Camera controls feature smooth damping for fluid navigation.
-- After a run, **twenty-two** diagnostic graphs report 3D worldlines, both strain polarizations, radiative-curvature proxy, frequency and spectrum, separation, energy/angular momentum, accumulated strain power, orbital quantities, curvature estimates, and shaded 3D potential/constraint-shaped surfaces. The AP Physics C inspector additionally reports SI separation/velocity/force/acceleration vectors, momentum, K/U/E, angular momentum, impact speed, impulse and dissipated energy.
-
-- Kerr QNM spin dependence uses a **published-style fit**, exact at Schwarzschild \(\chi=0\) for \(\ell=2,n=0\).
-
-That honesty is a feature. Society for Science scores understanding of limitations.
-
----
-
-## Suggested poster line
-
-**DYNAMICAL SPACETIME**  
-A computational investigation of nonlinear gravitational dynamics and gravitational-wave information.
-
-\[
-\text{initial geometry} \;\rightarrow\; \text{spacetime evolution} \;\rightarrow\; \text{gravitational radiation} \;\rightarrow\; \text{physical inference}
-\]
-
----
-
-## Competition notes
-
-ISEF-affiliated fairs: maximum **three** team members, maximum **12-month** continuous research window, and a demonstration is not a substitute for a research question. Use this codebase as the instrument. The paper is the campaign data.
-
-See `docs/SCIENCE.md` and `docs/METHODS.md`.
